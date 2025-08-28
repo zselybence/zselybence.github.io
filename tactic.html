@@ -1,23 +1,96 @@
 <!doctype html>
+<!doctype html>
 <html lang="hu">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>R6 Taktika — Nézet</title>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    #recommended {
+      margin-bottom: 20px;
+    }
+    
+    #recommendedList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-weight: bold;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px; /* Add some spacing between items */
+    }
+    
+    #recommendedList li {
+      background-color: #95a5a6; /* Grey color */
+      color: white;
+      padding: 5px 10px;
+      border-radius: 15px; /* Rounded bubbles */
+      display: inline-flex; /* Use inline-flex for better alignment */
+      align-items: center; /* Center items vertically */
+      justify-content: center; /* Center items horizontally */
+      text-align: center; /* Center the text */
+    }
+    
+    #recommendedList li:not(:last-child)::after {
+      content: ''; /* Remove the separator */
+    }
+    
+    .dark-mode #recommendedList li {
+      background-color: #7f8c8d; /* Darker grey for dark mode */
+    }
+    
+    #stepsList {
+      list-style: none;
+      padding: 0;
+    }
+    
+    #stepsList li {
+      background-color: #f5f5f5;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px; /* Less rounded corners for better appearance */
+    }
+    
+    .dark-mode #stepsList li {
+      background-color: #3a3a3a;
+    }
+    
+    #tacticSelect {
+      padding: 5px 10px; /* Further reduced padding */
+      border-radius: 5px; /* Less rounded corners */
+      border: 2px solid #3498db;
+      background-color: #fff;
+      font-size: 16px;
+      margin-bottom: 15px;
+      width: 100%;
+      max-width: 300px;
+      appearance: none; /* Remove default styling */
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 40px;
+      height: 30px; /* Set a fixed height */
+    }
+    
+    .dark-mode #tacticSelect {
+      background-color: #3a3a3a;
+      border-color: #3498db;
+      color: #ffffff;
+    }
+  </style>
 </head>
 <body>
     <header class="site-header">
         <div class="top-left">
-          <input id="mapSearch" type="search" placeholder="Keresés lépések vagy operátorok között...">
-        </div>
-        <div id="metaInfo" class="meta-info">
-            <div><dt>Térkép:</dt> <dd id="metaMap"></dd></div>
-            <div><dt>Site:</dt> <dd id="metaSite"></dd></div>
-            <div><dt>Mód:</dt> <dd id="metaMode"></dd></div>
+          <div><dt>Térkép:</dt> <dd id="metaMap"></dd></div>
+          <div><dt>Site:</dt> <dd id="metaSite"></dd></div>
+          <div><dt>Mód:</dt> <dd id="metaMode"></dd></div>
         </div>
         <div class="top-right">
           <button id="darkToggle" type="button" class="dark-btn">🌓</button>
+          <a href="manage-tactics.html" class="add-tactic-btn">⚙️ Taktikák kezelése</a>
           <a href="add-tactic.html" class="add-tactic-btn">+ Új taktika</a>
           <a href="index.html" id="backButton" class="back-button" aria-label="Vissza a listához">← Vissza</a>
         </div>
@@ -25,14 +98,15 @@
 
   <main id="main" class="tactic-main">
     <section aria-labelledby="stepsHeading" id="stepsSection">
-      <h2 id="stepsHeading">Lépések</h2>
+      <h2 id="stepsHeading"></h2> <!-- Tactic name will be displayed here -->
+      <label for="tacticSelect">Válassz taktikát:</label>
+      <select id="tacticSelect"></select>
+      <aside id="recommended" aria-labelledby="recHeading">
+        <h3 id="recHeading">Ajánlott operátorok</h3>
+        <ul id="recommendedList"></ul>
+      </aside>
       <ol id="stepsList" class="steps-list"></ol>
     </section>
-
-    <aside id="recommended" aria-labelledby="recHeading">
-      <h3 id="recHeading">Ajánlott operátorok</h3>
-      <ul id="recommendedList"></ul>
-    </aside>
   </main>
 
   <footer class="site-footer">

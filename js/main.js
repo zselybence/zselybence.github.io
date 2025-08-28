@@ -40,23 +40,44 @@ function renderMapList(data){
 
     Object.keys(mapObj.sites||{}).sort().forEach(siteName=>{
       const siteLi = document.createElement('li');
-      const attackA = document.createElement('a');
-      attackA.href=`tactic.html?map=${encodeURIComponent(mapName)}&site=${encodeURIComponent(siteName)}&mode=attack`;
-      attackA.textContent='Támadás';
-      attackA.className='button';
+      
+      // Get tactic data for this site
+      const siteObj = mapObj.sites[siteName];
+      
+      // Check if there are attack tactics
+      const hasAttackTactics = siteObj.attack && (
+        (Array.isArray(siteObj.attack) && siteObj.attack.length > 0) || 
+        (typeof siteObj.attack === 'object' && Object.keys(siteObj.attack).length > 0)
+      );
+      
+      // Check if there are defense tactics
+      const hasDefenseTactics = siteObj.defense && (
+        (Array.isArray(siteObj.defense) && siteObj.defense.length > 0) || 
+        (typeof siteObj.defense === 'object' && Object.keys(siteObj.defense).length > 0)
+      );
+      
+      // Edit links for attack and defense modes (only if tactics exist)
+      if (hasAttackTactics) {
+        const attackA = document.createElement('a');
+        attackA.href=`tactic.html?map=${encodeURIComponent(mapName)}&site=${encodeURIComponent(siteName)}&mode=attack`;
+        attackA.textContent='Támadás';
+        attackA.className='button';
+        siteLi.appendChild(attackA);
+      }
 
-      const defA = document.createElement('a');
-      defA.href=`tactic.html?map=${encodeURIComponent(mapName)}&site=${encodeURIComponent(siteName)}&mode=defense`;
-      defA.textContent='Védekezés';
-      defA.className='button';
-
-      siteLi.appendChild(attackA);
-      siteLi.appendChild(defA);
+      if (hasDefenseTactics) {
+        const defA = document.createElement('a');
+        defA.href=`tactic.html?map=${encodeURIComponent(mapName)}&site=${encodeURIComponent(siteName)}&mode=defense`;
+        defA.textContent='Védekezés';
+        defA.className='button';
+        siteLi.appendChild(defA);
+      }
+      
       const siteLabel = document.createElement('div');
       siteLabel.textContent = siteName;
       siteLabel.style.fontSize = '0.9rem';
       siteLabel.style.marginBottom='4px';
-      siteLi.insertBefore(siteLabel, attackA);
+      siteLi.insertBefore(siteLabel, siteLi.firstChild);
 
       sitesUl.appendChild(siteLi);
     });

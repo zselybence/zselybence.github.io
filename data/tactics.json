@@ -1,24 +1,51 @@
 {
-    "maps": {
-      "Bank": {
-		"sites": {
-		  "Vault": {
-			"defense": {
-			  "operator": "Doc",
-			  "title": "Setup",
-			  "setup": [
-				{
-				  "text": "asd",
-				  "img": 1
-				},
-				{
-				  "text": "aa",
-				  "img": 2
-				}
-			  ]
-			}
-		  }
-		}
+  "maps": {
+    "Bank": {
+      "sites": {
+        "Basement": {
+          "defense": [
+            {
+              "operator": [
+                "Any"
+              ],
+              "title": "Fav Setup",
+              "setup": [
+                {
+                  "text": "Make this hole and reinforce the other side of the wall.",
+                  "img": 7
+                },
+                {
+                  "text": "Make this hole and reinforce the other side of the wall.",
+                  "img": 6
+                },
+                {
+                  "text": "Make this rotate.",
+                  "img": 5
+                },
+                {
+                  "text": "Make this head-hole.",
+                  "img": 4
+                },
+                {
+                  "text": "Deploy shield here.",
+                  "img": 3
+                },
+                {
+                  "text": "Reinforce this wall.",
+                  "img": 2
+                },
+                {
+                  "text": "Make these foot-holes.",
+                  "img": 1
+                },
+                {
+                  "text": "Reinforce the elevator, vault, and the open hatch."
+                }
+              ]
+            }
+          ]
+        }
+      }
     }
   }
 }

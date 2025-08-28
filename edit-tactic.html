@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>R6 Taktika — Új taktika hozzáadása</title>
+  <title>R6 Taktika — Taktika szerkesztése</title>
   <link rel="stylesheet" href="css/styles.css">
   <style>
     form {
@@ -59,23 +59,8 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 1rem;
-      display: inline-block; /* Ensure it aligns properly */
-      margin-bottom: 10px; /* Add margin for spacing */
     }
-    button.generate-json {
-      margin-top: 20px;
-      background: #27ae60;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1.1rem;
-      width: 49%;
-      display: inline-block; /* Change float to inline-block */
-      margin-right: 2%; /* Add margin for spacing */
-    }
-    button.save-tactic {
+    button.update-tactic {
       margin-top: 20px;
       background: #3498db;
       color: white;
@@ -84,22 +69,7 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 1.1rem;
-      width: 49%;
-      display: inline-block; /* Change float to inline-block */
-      margin-right: 2%; /* Add margin for spacing */
-    }
-    button.download-json {
-      margin-top: 20px;
-      background: #9b59b6;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1.1rem;
       width: 100%;
-      margin-bottom: 20px;
-      display: none; /* Hide initially */
     }
     button.download-json {
       margin-top: 20px;
@@ -114,6 +84,19 @@
       margin-bottom: 20px;
       display: none;
     }
+    .clear {
+      clear: both;
+    }
+    pre#output {
+      background: #f4f4f4;
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
     a.back-link {
       display: inline-block;
       margin: 20px auto;
@@ -125,9 +108,9 @@
   </style>
 </head>
 <body>
-  <a href="index.html" class="back-link">← Vissza a listához</a>
+  <a href="manage-tactics.html" class="back-link">← Vissza a taktikák kezeléséhez</a>
   <form id="tacticForm">
-    <h1>Új taktika hozzáadása</h1>
+    <h1>Taktika szerkesztése</h1>
     <label for="mapName">Térkép neve</label>
     <input type="text" id="mapName" name="mapName" required>
 
@@ -140,7 +123,10 @@
       <option value="defense">Védekezés</option>
     </select>
 
-    <label for="operator">Operátor neve (több operátor esetén vesszővel válaszd el őket)</label>
+    <label for="tacticSelect">Taktika kiválasztása</label>
+    <select id="tacticSelect" name="tacticSelect"></select>
+
+    <label for="operator">Operátor neve (több operátor esetén, válaszd el őket vesszővel)</label>
     <input type="text" id="operator" name="operator" placeholder="Pl. Ash, Jäger">
 
     <label for="title">Taktika címe</label>
@@ -149,26 +135,128 @@
     <div class="steps-container" id="stepsContainer">
       <h2>Lépések</h2>
     </div>
-    <button type="button" class="add-step" id="addStepBtn" style="width: 100%; display: block; margin: 10px 0;">+ Lépés hozzáadása</button>
+    <button type="button" class="add-step" id="addStepBtn">+ Lépés hozzáadása</button>
 
-    <div style="display: flex; gap: 10px; margin-top: 20px;">
-      <button type="button" class="generate-json" id="generateJsonBtn" style="flex: 1;">JSON generálása</button>
-      <button type="button" class="save-tactic" id="saveTacticBtn" style="flex: 1;">Taktika mentése</button>
-    </div>
+    <button type="button" class="update-tactic" id="updateTacticBtn">Taktika frissítése</button>
     <div class="clear"></div>
 
     <pre id="output" aria-live="polite"></pre>
-    <!-- <button type="button" class="download-json" id="downloadJsonBtn" style="display: none;">JSON letöltése</button> -->
     <div id="saveStatus"></div>
+    <button type="button" class="download-json" id="downloadJsonBtn" style="display: none;">JSON letöltése</button>
   </form>
 
   <script>
     const stepsContainer = document.getElementById('stepsContainer');
     const addStepBtn = document.getElementById('addStepBtn');
-    const generateJsonBtn = document.getElementById('generateJsonBtn');
-    const saveTacticBtn = document.getElementById('saveTacticBtn');
+    const updateTacticBtn = document.getElementById('updateTacticBtn');
     const output = document.getElementById('output');
-    const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+    const tacticSelect = document.getElementById('tacticSelect');
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const mapName = urlParams.get('map');
+    const siteName = urlParams.get('site');
+    const mode = urlParams.get('mode');
+
+    // Pre-fill form with existing tactic data
+    document.getElementById('mapName').value = mapName;
+    document.getElementById('siteName').value = siteName;
+    document.getElementById('mode').value = mode;
+
+    let tacticsData = {};
+    let currentTactic = {};
+
+    // Load tactics data
+    async function loadTacticsData() {
+      try {
+        const res = await fetch('data/tactics.json', { cache: 'no-cache' });
+        tacticsData = await res.json();
+        populateTacticSelect();
+      } catch (error) {
+        console.error('Error loading tactics data:', error);
+      }
+    }
+
+    // Populate tactic select dropdown
+    function populateTacticSelect() {
+      tacticSelect.innerHTML = '';
+      const mapObj = tacticsData.maps?.[mapName];
+      const siteObj = mapObj?.sites?.[siteName];
+      const tactics = siteObj?.[mode] || [];
+
+      // Check if tactics is an array or an object
+      if (Array.isArray(tactics)) {
+        tactics.forEach((tactic, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = tactic.title || `Taktika ${index + 1}`;
+          tacticSelect.appendChild(option);
+        });
+      } else if (tactics && typeof tactics === 'object') {
+        // For defense mode, tactics might be an object
+        const option = document.createElement('option');
+        option.value = 0;
+        option.textContent = tactics.title || 'Taktika';
+        tacticSelect.appendChild(option);
+      }
+
+      // Select the first tactic by default if there are any tactics
+      if (tacticSelect.options.length > 0) {
+        tacticSelect.selectedIndex = 0;
+        loadSelectedTactic();
+      } else {
+        // If no tactics, initialize with one step
+        stepsContainer.innerHTML = '<h2>Lépések</h2>';
+        addStepBtn.click();
+      }
+    }
+
+    // Load selected tactic data
+    function loadSelectedTactic() {
+      const selectedIndex = tacticSelect.selectedIndex;
+      if (selectedIndex < 0) return;
+
+      const mapObj = tacticsData.maps?.[mapName];
+      const siteObj = mapObj?.sites?.[siteName];
+      const tactics = siteObj?.[mode] || [];
+
+      if (Array.isArray(tactics)) {
+        currentTactic = tactics[selectedIndex] || {};
+      } else {
+        currentTactic = tactics;
+      }
+
+      // Update form fields with selected tactic data
+      document.getElementById('operator').value = Array.isArray(currentTactic.operator) ? currentTactic.operator.join(', ') : currentTactic.operator || '';
+      document.getElementById('title').value = currentTactic.title || '';
+
+      // Clear existing steps
+      stepsContainer.innerHTML = '<h2>Lépések</h2>';
+
+      // Add steps
+      const steps = mode === 'attack' ? currentTactic.steps : currentTactic.setup;
+      if (steps) {
+        steps.forEach(step => {
+          const stepItem = createStepItem();
+          stepItem.querySelector('textarea').value = step.text;
+          if (step.img) {
+            stepItem.querySelector('input[type="number"]:nth-of-type(1)').value = step.img;
+          }
+          if (step.img2) {
+            stepItem.querySelector('input[type="number"]:nth-of-type(2)').value = step.img2;
+          }
+          stepsContainer.appendChild(stepItem);
+        });
+      }
+
+      // Initialize with one step if none exist
+      if (stepsContainer.children.length === 1) {
+        addStepBtn.click();
+      }
+    }
+
+    // Event listener for tactic selection
+    tacticSelect.addEventListener('change', loadSelectedTactic);
 
     function createStepItem() {
       const div = document.createElement('div');
@@ -219,11 +307,11 @@
       stepsContainer.appendChild(stepItem);
     });
 
-    generateJsonBtn.addEventListener('click', () => {
+    updateTacticBtn.addEventListener('click', () => {
       const mapName = document.getElementById('mapName').value.trim();
       const siteName = document.getElementById('siteName').value.trim();
       const mode = document.getElementById('mode').value;
-      const operator = document.getElementById('operator').value.trim();
+      const operator = document.getElementById('operator').value.trim().split(',').map(op => op.trim()).filter(op => op); // Convert to array
       const title = document.getElementById('title').value.trim();
 
       if (!mapName || !siteName || !mode) {
@@ -256,9 +344,6 @@
         steps.push(stepObj);
       }
 
-      // Split operators by comma and trim whitespace
-      const operatorArray = operator ? operator.split(',').map(op => op.trim()) : ['Any Operator'];
-
       // Create the correct JSON structure with "maps" key
       const outputJson = {
         maps: {
@@ -266,11 +351,11 @@
             sites: {
               [siteName]: {
                 [mode]: mode === 'attack' ? [{
-                  operator: operatorArray,
+                  operator: operator || 'Any Operator',
                   title: title || '',
                   steps: steps
                 }] : {
-                  operator: operatorArray,
+                  operator: operator || 'Any Operator',
                   title: title || '',
                   setup: steps
                 }
@@ -284,16 +369,6 @@
       downloadJsonBtn.style.display = 'block'; // Show download button
     });
 
-    saveTacticBtn.addEventListener('click', () => {
-      if (!output.textContent) {
-        alert('Kérlek először generáld le a JSON-t.');
-        return;
-      }
-
-      // Instead of sending to server, trigger download of complete tactics.json
-      downloadCompleteTactics();
-    });
-
     async function downloadCompleteTactics() {
       if (!output.textContent) {
         alert('Nincs letölthető adat.');
@@ -305,17 +380,17 @@
         const res = await fetch('data/tactics.json', { cache: 'no-cache' });
         const existingData = await res.json();
         
-        // Parse the new tactic data
-        const newTacticData = JSON.parse(output.textContent);
-        const newMapData = newTacticData.maps;
-        const mapName = Object.keys(newMapData)[0];
-        const mapData = newMapData[mapName];
+        // Parse the updated tactic data
+        const updatedTacticData = JSON.parse(output.textContent);
+        const updatedMapData = updatedTacticData.maps;
+        const mapName = Object.keys(updatedMapData)[0];
+        const mapData = updatedMapData[mapName];
         const siteName = Object.keys(mapData.sites)[0];
         const siteData = mapData.sites[siteName];
         const mode = Object.keys(siteData)[0];
         const tactic = siteData[mode];
         
-        // Merge new tactic with existing data
+        // Merge updated tactic with existing data
         const mergedData = JSON.parse(JSON.stringify(existingData)); // Deep copy
         
         // Initialize maps object if it doesn't exist
@@ -338,32 +413,8 @@
           mergedData.maps[mapName].sites[siteName] = {};
         }
         
-        // Ensure the mode property is an array
-        if (!Array.isArray(mergedData.maps[mapName].sites[siteName][mode])) {
-          // If it's not an array, convert it to an array
-          // But first, check if it's an object with the expected structure
-          if (mergedData.maps[mapName].sites[siteName][mode] && typeof mergedData.maps[mapName].sites[siteName][mode] === 'object') {
-            // For attack mode, it should already be an array of tactics
-            // For defense mode, it should be an object with 'setup' and 'title' properties
-            if (mode === 'attack') {
-              // Convert to array if it's not already
-              mergedData.maps[mapName].sites[siteName][mode] = [mergedData.maps[mapName].sites[siteName][mode]];
-            } else {
-              // For defense mode, it should be an array
-              mergedData.maps[mapName].sites[siteName][mode] = [mergedData.maps[mapName].sites[siteName][mode]];
-            }
-          } else {
-            // If it's not an object, initialize as an empty array
-            mergedData.maps[mapName].sites[siteName][mode] = [];
-          }
-        }
-        
-        // Add the new tactic to the array
-        if (mode === 'attack') {
-          mergedData.maps[mapName].sites[siteName][mode].push(tactic[0]);
-        } else {
-          mergedData.maps[mapName].sites[siteName][mode].push(tactic);
-        }
+        // Update the tactic
+        mergedData.maps[mapName].sites[siteName][mode] = tactic;
         
         // Download the complete updated tactics.json
         const blob = new Blob([JSON.stringify(mergedData, null, 2)], { type: 'application/json' });
@@ -387,19 +438,12 @@
         return;
       }
 
-      const blob = new Blob([output.textContent], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'tactic.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Instead of downloading just the output, download the complete tactics.json
+      downloadCompleteTactics();
     });
 
-    // Initialize with one step
-    addStepBtn.click();
+    // Initialize
+    loadTacticsData();
   </script>
 </body>
 </html>

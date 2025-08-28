@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>R6 Taktikák — Taktikák kezelése</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: var(--card);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    a.back-link {
+      display: inline-block;
+      margin: 20px auto;
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-link">← Vissza a listához</a>
+  
+  <div class="container">
+    <h1>Taktikák kezelése</h1>
+    
+    <ul id="mapList" class="map-list" role="list"></ul>
+  </div>
+
+  <script>
+    const DATA_SRC = 'data/tactics.json';
+    const mapListEl = document.getElementById('mapList');
+
+    async function loadCurrentTactics() {
+      try {
+        const res = await fetch(DATA_SRC, {cache: 'no-cache'});
+        if (!res.ok) throw new Error('Nem sikerült betölteni az aktuális taktikákat');
+        const json = await res.json();
+        renderMapList(json);
+      } catch (error) {
+        console.error('Hiba történt az aktuális taktikák betöltésekor:', error);
+      }
+    }
+
+    function renderMapList(data) {
+      mapListEl.innerHTML = '';
+      const maps = Object.keys(data.maps || {}).sort();
+      maps.forEach(mapName => {
+        const mapObj = data.maps[mapName];
+        const li = document.createElement('li');
+        const mapTitle = document.createElement('strong');
+        mapTitle.textContent = mapName;
+        li.appendChild(mapTitle);
+
+        const sitesUl = document.createElement('ul');
+        sitesUl.className = 'site-list';
+
+        Object.keys(mapObj.sites || {}).sort().forEach(siteName => {
+          const siteLi = document.createElement('li');
+          
+          // Get tactic data for this site
+          const siteObj = mapObj.sites[siteName];
+          
+          // Check if there are attack tactics
+          const hasAttackTactics = siteObj.attack && (
+            (Array.isArray(siteObj.attack) && siteObj.attack.length > 0) || 
+            (typeof siteObj.attack === 'object' && Object.keys(siteObj.attack).length > 0)
+          );
+          
+          // Check if there are defense tactics
+          const hasDefenseTactics = siteObj.defense && (
+            (Array.isArray(siteObj.defense) && siteObj.defense.length > 0) || 
+            (typeof siteObj.defense === 'object' && Object.keys(siteObj.defense).length > 0)
+          );
+          
+          // Edit links for attack and defense modes (only if tactics exist)
+          if (hasAttackTactics) {
+            const attackA = document.createElement('a');
+            attackA.href = `edit-tactic.html?map=${encodeURIComponent(mapName)}&site=${encodeURIComponent(siteName)}&mode=attack&tactic=${encodeURIComponent(JSON.stringify(siteObj.attack || []))}`;
+            attackA.textContent = 'Támadás szerkesztése';
+            attackA.className = 'button';
+            siteLi.appendChild(attackA);
+          }
+
+          if (hasDefenseTactics) {
+            const defA = document.createElement('a');
+            defA.href = `edit-tactic.html?map=${encodeURIComponent(mapName)}&site=${encodeURIComponent(siteName)}&mode=defense&tactic=${encodeURIComponent(JSON.stringify(siteObj.defense || {}))}`;
+            defA.textContent = 'Védekezés szerkesztése';
+            defA.className = 'button';
+            siteLi.appendChild(defA);
+          }
+          
+          const siteLabel = document.createElement('div');
+          siteLabel.textContent = siteName;
+          siteLabel.style.fontSize = '0.9rem';
+          siteLabel.style.marginBottom = '4px';
+          siteLi.insertBefore(siteLabel, siteLi.firstChild);
+
+          sitesUl.appendChild(siteLi);
+        });
+        li.appendChild(sitesUl);
+        mapListEl.appendChild(li);
+      });
+    }
+
+    // Initialize
+    loadCurrentTactics();
+  </script>
+</body>
+</html>
