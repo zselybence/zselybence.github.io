@@ -1,67 +1,24 @@
 {
-    "recent": [
-      {"map":"Bank","site":"Armory","mode":"attack"},
-      {"map":"Bank","site":"Armory","mode":"defense"}
-    ],
     "maps": {
       "Bank": {
-        "sites": {
-          "Armory": {
-            "attack": [
-              {
-                "operator": "Ash",
-                "title": "Gyors beugrás és A-site clear",
-                "steps": [
-                  {"text":"Smoke fel, ablakon beugrás, rögtön jobbra lefelé clearing.","img":1},
-                  {"text":"Fő rongáló hely: front locker, vigyázz a roamerekre.","img":2}
-                ]
-              },
-              {
-                "operator": "Thermite",
-                "title": "Hard-breach push",
-                "steps": [
-                  {"text":"Exo-charge fel, panel nyitás, flash támogatás.","img":1},
-                  {"text":"Helyezkedj el a zsákmány kinyitásához.","img":2}
-                ]
-              }
-            ],
-            "recommendedOperators": ["Ash","Thermite","Zofia"]
-          },
-          "Vault": {
-            "attack": [
-              {
-                "operator":"Twitch",
-                "title":"Elektronikai shut-down",
-                "steps":[ {"text":"Drone előre, taser felhasználás a kamerák ellen","img":1} ]
-              }
-            ],
-            "defense": {
-              "setup": [
-                {"text":"Reinforce main wall, place mute in server room","img":1},
-                {"text":"Barrel of mira in the office", "img":2}
-              ],
-              "recommendedOperators": ["Mute","Maestro"]
-            }
-          }
-        }
-      },
-      "Outback": {
-        "sites": {
-          "A-site": {
-            "attack": [
-              {
-                "operator":"Sledge",
-                "title":"Window smash",
-                "steps":[ {"text":"Sledge az ablakon, gyors lépés", "img":1} ]
-              }
-            ],
-            "defense": {
-              "setup":[ {"text":"Reinforce north wall","img":1} ],
-              "recommendedOperators": ["Jager","Bandit"]
-            }
-          }
-        }
-      }
+		"sites": {
+		  "Vault": {
+			"defense": {
+			  "operator": "Doc",
+			  "title": "Setup",
+			  "setup": [
+				{
+				  "text": "asd",
+				  "img": 1
+				},
+				{
+				  "text": "aa",
+				  "img": 2
+				}
+			  ]
+			}
+		  }
+		}
     }
   }
-  
+}
