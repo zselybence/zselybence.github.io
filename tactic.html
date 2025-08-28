@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>R6 Taktika — Nézet</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="top-left">
+          <input id="mapSearch" type="search" placeholder="Keresés lépések vagy operátorok között...">
+        </div>
+        <div id="metaInfo" class="meta-info">
+            <div><dt>Térkép:</dt> <dd id="metaMap"></dd></div>
+            <div><dt>Site:</dt> <dd id="metaSite"></dd></div>
+            <div><dt>Mód:</dt> <dd id="metaMode"></dd></div>
+        </div>
+        <div class="top-right">
+          <button id="darkToggle" type="button" class="dark-btn">🌓</button>
+          <a href="add-tactic.html" class="add-tactic-btn">+ Új taktika</a>
+          <a href="index.html" id="backButton" class="back-button" aria-label="Vissza a listához">← Vissza</a>
+        </div>
+    </header>
+
+  <main id="main" class="tactic-main">
+    <section aria-labelledby="stepsHeading" id="stepsSection">
+      <h2 id="stepsHeading">Lépések</h2>
+      <ol id="stepsList" class="steps-list"></ol>
+    </section>
+
+    <aside id="recommended" aria-labelledby="recHeading">
+      <h3 id="recHeading">Ajánlott operátorok</h3>
+      <ul id="recommendedList"></ul>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <small>Képek forrása: <code>assets/{Map}/{Site}/{mode}/{step}.png</code></small>
+  </footer>
+
+  <script src="js/tactic.js" defer></script>
+</body>
+</html>

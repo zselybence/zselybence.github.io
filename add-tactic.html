@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>R6 Taktika — Új taktika hozzáadása</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    form {
+      max-width: 600px;
+      margin: 20px auto;
+      background: var(--card);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    .steps-container {
+      margin-top: 12px;
+    }
+    .step-item {
+      border: 1px solid #eee;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .remove-step {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button.add-step {
+      margin-top: 10px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button.generate-json {
+      margin-top: 20px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      width: 100%;
+    }
+    pre#output {
+      background: #f4f4f4;
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    a.back-link {
+      display: inline-block;
+      margin: 20px auto;
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-link">← Vissza a listához</a>
+  <form id="tacticForm">
+    <h1>Új taktika hozzáadása</h1>
+    <label for="mapName">Térkép neve</label>
+    <input type="text" id="mapName" name="mapName" required>
+
+    <label for="siteName">Site neve</label>
+    <input type="text" id="siteName" name="siteName" required>
+
+    <label for="mode">Mód</label>
+    <select id="mode" name="mode" required>
+      <option value="attack">Támadás</option>
+      <option value="defense">Védekezés</option>
+    </select>
+
+    <label for="operator">Operátor neve</label>
+    <input type="text" id="operator" name="operator" placeholder="Pl. Ash vagy Jäger">
+
+    <label for="title">Taktika címe</label>
+    <input type="text" id="title" name="title" placeholder="Pl. Gyors beugrás vagy Setup">
+
+    <div class="steps-container" id="stepsContainer">
+      <h2>Lépések</h2>
+    </div>
+    <button type="button" class="add-step" id="addStepBtn">+ Lépés hozzáadása</button>
+
+    <button type="button" class="generate-json" id="generateJsonBtn">JSON generálása</button>
+
+    <pre id="output" aria-live="polite"></pre>
+  </form>
+
+  <script>
+    const stepsContainer = document.getElementById('stepsContainer');
+    const addStepBtn = document.getElementById('addStepBtn');
+    const generateJsonBtn = document.getElementById('generateJsonBtn');
+    const output = document.getElementById('output');
+
+    function createStepItem() {
+      const div = document.createElement('div');
+      div.className = 'step-item';
+
+      const textLabel = document.createElement('label');
+      textLabel.textContent = 'Lépés szövege';
+      const textInput = document.createElement('textarea');
+      textInput.rows = 2;
+      textInput.required = true;
+
+      const imgLabel = document.createElement('label');
+      imgLabel.textContent = 'Kép neve vagy száma (opcionális)';
+      const imgInput = document.createElement('input');
+      imgInput.type = 'text';
+      imgInput.placeholder = 'Pl. 1 vagy ash_step1';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-step';
+      removeBtn.textContent = '×';
+      removeBtn.title = 'Lépés eltávolítása';
+      removeBtn.addEventListener('click', () => {
+        div.remove();
+      });
+
+      div.appendChild(removeBtn);
+      div.appendChild(textLabel);
+      div.appendChild(textInput);
+      div.appendChild(imgLabel);
+      div.appendChild(imgInput);
+
+      return div;
+    }
+
+    addStepBtn.addEventListener('click', () => {
+      const stepItem = createStepItem();
+      stepsContainer.appendChild(stepItem);
+    });
+
+    generateJsonBtn.addEventListener('click', () => {
+      const mapName = document.getElementById('mapName').value.trim();
+      const siteName = document.getElementById('siteName').value.trim();
+      const mode = document.getElementById('mode').value;
+      const operator = document.getElementById('operator').value.trim();
+      const title = document.getElementById('title').value.trim();
+
+      if (!mapName || !siteName || !mode) {
+        alert('Kérlek töltsd ki a kötelező mezőket: Térkép, Site, Mód.');
+        return;
+      }
+
+      const steps = [];
+      const stepItems = stepsContainer.querySelectorAll('.step-item');
+      if (stepItems.length === 0) {
+        alert('Adj hozzá legalább egy lépést.');
+        return;
+      }
+
+      for (const item of stepItems) {
+        const text = item.querySelector('textarea').value.trim();
+        const imgVal = item.querySelector('input[type="text"]').value.trim();
+        if (!text) {
+          alert('Minden lépéshez adj meg szöveget.');
+          return;
+        }
+        const stepObj = { text };
+        if (imgVal) {
+          // Try to parse as number, otherwise use as string
+          const numVal = Number(imgVal);
+          stepObj.img = isNaN(numVal) ? imgVal : numVal;
+        }
+        steps.push(stepObj);
+      }
+
+      let tacticJson;
+      if (mode === 'attack') {
+        tacticJson = [{
+          operator: operator || 'Any Operator',
+          title: title || '',
+          steps: steps
+        }];
+      } else {
+        tacticJson = {
+          operator: operator || 'Any Operator',
+          title: title || '',
+          setup: steps
+        };
+      }
+
+      const outputJson = {
+        [mapName]: {
+          sites: {
+            [siteName]: {
+              [mode]: tacticJson
+            }
+          }
+        }
+      };
+
+      output.textContent = JSON.stringify(outputJson, null, 2);
+    });
+
+    // Initialize with one step
+    addStepBtn.click();
+  </script>
+</body>
+</html>
